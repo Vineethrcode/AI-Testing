@@ -1,0 +1,106 @@
+B – Blueprint
+Objective
+Understand what needs to be tested before generating any QA artifacts
+Actions To be taken in Blueprint stage:
+Understand the problem or project and identify:
+•	Objective.md and all other attached docs
+•	JIRA ticket
+•	Acceptance Criteria
+•	Business Rules
+•	Ask clarifying questions if requirements are incomplete
+Initialize Project Memory
+Create and maintain
+•	Findings.md
+•	Progress.md
+•	Task_plan.md
+Note: Do not continue until the feature is understood
+
+L- Link
+Connect every available requirement source and validate the generated solution.
+
+Connect every piece of information available before planning testing
+1: Possible Inputs: 
+•	JIRA
+•	Acceptance Criteria
+•	BRD
+•	UI doc
+•	API documentation
+•	Objective.md
+•	Previous discussions
+•	Meeting Notes
+•	User clarifications
+•	Or any API to link to different applications like JIRA, and other apps
+If only one input is given treat it as the current source of truth.
+2: Generate and validate a working draft or prototype of the requested artifact to verify that the solution works.
+•	Test Plan
+•	Test Scenarios
+•	Test Plan Generator
+•	Test Cases (if requested in Skill.md)
+Ask questions whenever required information is missing.
+3:  Validate AI Output
+Before proceeding to the next phase, review the generated output.
+Verify: 
+•	Requirement Coverage
+•	Template Compliance
+•	Scope Coverage
+•	Risk Coverage
+•	Missing Sections
+•	Duplicate Content
+•	Logical Consistency
+
+If problems are found:
+•	Improve the output.
+•	Re-validate.
+•	Continue only after validation passes.
+4: Update Project memory
+Record important information in:
+•	Findings.md
+•	Progress.md
+•	Task_plan.md 
+
+A – Architect
+Document the workflow, components, tools, and integrations that make the validated solution work
+Actions
+1: Plan the workflow
+Define the steps AI will follow
+Example: 
+Input -> Requirement analysis -> Skill.md -> LLM -> Generated Output -> Validation
+
+2: Identify Required Component
+List everything needed to build the solution
+•	JIRA
+•	Skill.md
+•	Objective.md
+•	Templates
+•	LLM
+
+3: Identify Integrations
+•	JIRA (Atlassian)
+•	Github
+•	Confluence
+•	Local LLM (like Ollama or any LLM)
+
+4: Confirm Readiness
+Before implementation, ensure:
+•	Requirements are understood.
+•	Required files are available.
+•	Required tools are available.
+•	Workflow is complete.
+Proceed only when everything is ready.
+
+STYLE
+Objective: Refine the validated output and present it in a professional format.
+Actions
+•	Review the generated output.
+•	Improve formatting, readability and completeness.
+•	Generate the final QA artifacts defined in Skill.md.
+•	Present the output for user review.
+•	Refine the output based on feedback if required.
+
+TRIGGER and DEPLOY:
+Objective: Execute the completed workflow, update project memory, and prepare the solution for future reuse.
+Actions
+•	Execute the workflow using the provided inputs.
+•	Update findings.md, progress.md and task_plan.md.
+•	Save important decisions and discoveries.
+•	Confirm the solution is complete and ready for the next request.
