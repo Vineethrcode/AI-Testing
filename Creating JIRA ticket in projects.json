@@ -1,0 +1,158 @@
+{
+  "name": "Creating JIRA ticket in projects",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -160,
+        -64
+      ],
+      "id": "108e6021-756f-427b-a61e-bb9049020e6b",
+      "name": "When chat message received",
+      "webhookId": "20a596e5-54a5-4a4f-8e61-9b5076a2f2af"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": " You are a QA automation engineer with 15 years of experience. You will get details of the Jira ticket through the chat. Your task is to create a Jira ticket with proper steps to reproduce and proper instructions like Jira. Use the Jira tool attached. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "5c6c056f-4e93-43c6-a282-757186770be1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3-32b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        48,
+        224
+      ],
+      "id": "f6a9255c-0e5b-4302-8db2-3367edf5e114",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "SLKenbbO9wfLXfrh",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "10000",
+          "mode": "list",
+          "cachedResultName": "My Software Team"
+        },
+        "issueType": {
+          "__rl": true,
+          "value": "10003",
+          "mode": "list",
+          "cachedResultName": "Task"
+        },
+        "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', `Go to this website:https://lakshyademo.splinkpro.ai/#pricing click on pay now which is for quarter 899, \"kdnfklsdk@gmail.com\" enter this is in email field, and enter this \"2746387246747864\" in mobile number field, this mobile number is getting accepted in which is invalid and this is a bug.`, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.jiraTool",
+      "typeVersion": 1,
+      "position": [
+        608,
+        224
+      ],
+      "id": "9b1817d6-7d9c-471d-ac6e-645d2bbc5289",
+      "name": "Create an issue in Jira Software",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "I1Y38vTYVATwMt6Y",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        304,
+        256
+      ],
+      "id": "f417822f-d95b-4f98-9975-301e096442d4",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an issue in Jira Software": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "420d2b20-6981-4b08-9ea5-383a3bbafaeb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "78eb7c4a69105cae0f51f4689205647ee7d336bc32a5ab42cdd04bcccd90baf1"
+  },
+  "nodeGroups": [],
+  "id": "j4vQ98fDhUHPHULH",
+  "tags": []
+}
