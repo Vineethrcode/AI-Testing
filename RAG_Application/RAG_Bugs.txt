@@ -1,0 +1,65 @@
+Question to RAG :What test cases cover the login functionality?
+Answer observed: It only listed out few of the test cases but not complete test cases numbers. The retrieval system retrieved specific chunks from lakshya_test_cases.md. It found chunks containing 30, 31, 36, and 37 and answered from those retrieved chunks. It didn't retrieve every login test case from the document.
+
+
+Question to RAG: What issues or observations were found in the login functionality?
+Answer Observed: when i ran task 3 it gave me this result as shown in the image ok? but wait here comes the actual doubt for me. it listed out 6 login statements but the question is issues or observations cover login functionality when i checked the lakshya_defects_observation.md file the login bugs starts from 26, 28, 25, 32, 38 (PASS), whereas in lakshya_test_Execution.md file the login is listed as 26,28,25,32,38 these are listed under Issue/Observation category okay? and now according to the answer it has given 21,22, and 23 i did not find these numbers in the above file but i found them in lakshya_test_cases.md file in which 20 is login and status is kept as Pass, 21 is also kept as pass, 23 as also pass.
+
+
+RAG Testing Notes — Current Findings
+Top-k affects results: Increasing retrieval depth from 5 to 8 changed the retrieved context and therefore the answer.
+Answer consistency issue: The meaning should remain clear even when the retrieved chunks change.
+Test-case identification: Saying only TC 30, 31, 36, 37 is not user-friendly; the answer should include Test Case ID + short description.
+"Source 2 / Source 3" problem: These are internal retrieved-chunk labels and are meaningless to the user. The answer should reference the actual document/source name.
+Potential source confusion: Login-related Pass test cases can be retrieved when asking specifically about login issues.
+Not fixing yet: We haven't established whether the root cause is top-k, chunking, metadata, retrieval, prompt/context construction, or LLM behavior.
+
+
+RAG Test 4 — Findings   (Related Images-Bug_in_RAG_3,4,5    available in screenshots folder)
+TC 28 mismatch: Source documents show TC 28 = Login → Forgot Password, but RAG gave a different description for TC 28.
+Wrong issue classification: RAG included TC 21, 22, 23 as issues, even though they are marked Pass in the test-case document.
+Wrong association: RAG appears to combine information from different chunks/records and attach the wrong description to a Test Case ID.
+Likely areas to investigate: chunking, duplicate/conflicting IDs, retrieval results, context construction, and LLM interpretation.
+No code changes yet: We haven't isolated the root cause.
+
+Question given to RAG: Which login test cases passed and which had issues?
+Answer observed: check image Bug_in_RAG_6.
+Login pass/issue classification produced many unrelated IDs and incorrect issue classifications. Investigation also revealed significant source-data inconsistencies, duplicate IDs, and conflicting statuses across documents. Root cause not yet isolated.
+
+																Current RAG issues as on 21/08/2026
+Current RAG problems — simple version
+Incomplete retrieval — with top-k = 5, it didn't retrieve all relevant login test cases.
+Answer changes with top-k — increasing retrieval depth changed the answer significantly.
+Wrong test-case identification — sometimes it gave only IDs; other times it gave descriptions without IDs.
+Wrong source references — it says things like "Source 2 / Source 3", which aren't useful to the user.
+Pass cases treated as issues — e.g. TC 21, 22, 23 were reported as issues.
+Wrong information attached to an ID — TC 28 was associated with the wrong description.
+Feature contamination — when asking specifically about Login, unrelated test cases appeared.
+Poor handling of source relationships — it mixes information from Test Cases, Execution, and Defects documents without clearly distinguishing them.
+Potential context/chunk problem — retrieved chunks can contain related words but not the exact record needed.
+Source-data ambiguity — our current Markdown documents aren't structured cleanly enough, so we need to retest with accurately structured data before blaming the RAG.
+
+Bottom line: The RAG can retrieve relevant information, but it currently struggles with precision, completeness, record identification, and distinguishing context across QA documents.
+
+
+RAG-Bug - 5
+after few developments, if the user asks give me test case details of test case id-90 or any ID the RAG is responding correctly, and after few developments a bug was observed while testing with other questions. I have asked which test cases failed. But RAG retrieved test cases which contain some failed content in the test case but not the test cases which have the status fail, like for example there is a test case in which it says verify if the payment gets failed if the OTP is not entered. This test case status is passed but our RAG chose something from the test case description which has "failed".
+
+RAG - bug - 6
+tese case ID-64 is actually having a status PASS, and ig the test case description is alo different, 
+in moderate failure test case ID - 59 is not existing in the base file
+test case ID - 61 and 63 are also not existing in the base file. 
+test case ID - 65 is existing but it is not related i mean the RAG response and the base file which has test case ID-65 are not related to each other.and even has a status PASS.
+
+In minor failures 
+test case ID-62 is not existing in the base file
+Test case ID - 66 is not realted to each other even though the status is marked as observation
+test case ID-67 is also not related 
+test case ID - 68 is also not related
+test case ID -69  and 70 are also not related like not matching the base file.
+from testcases.md file 
+
+RAG bug -7
+after the changes were made and aafter everything we got this response in which after evaluating, the RAG gave correct info about test case ID 96 but rest of the them are not existing like 57 and 58
+
+

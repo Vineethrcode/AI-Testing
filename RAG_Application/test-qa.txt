@@ -1,0 +1,6 @@
+Login Testing Requirements
+
+The login page requires a valid registered email and password.
+After successful authentication, the user should be redirected to the dashboard.
+Invalid credentials must display an appropriate error message.
+The account should be temporarily locked after five consecutive failed login attempts.

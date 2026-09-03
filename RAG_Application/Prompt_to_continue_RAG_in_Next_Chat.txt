@@ -1,0 +1,845 @@
+I am continuing an existing project called an AI QA RAG application.
+
+You are taking over from another ChatGPT conversation. Treat everything below as the current project history and state. Do NOT restart the project from scratch and do NOT repeat debugging steps that have already been completed.
+
+IMPORTANT WORKING STYLE:
+- Keep explanations short, simple and direct.
+- Give me step-by-step instructions.
+- When using GitHub/Copilot/n8n/etc., tell me exactly what to click or what command to run.
+- Do not make assumptions when we can verify something.
+- Do not repeatedly ask me to verify the same thing.
+- Do not make code changes just for the sake of changing something.
+- If something is already working, preserve it.
+- When giving a Copilot prompt, make it precise and limited to the required change.
+- Before making another code modification, understand the current implementation and the actual failure.
+- This project is being treated as a PRODUCT, not just an assignment.
+- We want a functioning, explainable and reasonably generic RAG system, not something hardcoded only for the current three documents.
+
+==================================================
+1. PROJECT PURPOSE
+==================================================
+
+We are building an AI-powered QA RAG application.
+
+The application allows a user to upload QA-related documents and then ask natural-language questions about the contents.
+
+The RAG should:
+1. Accept QA documents.
+2. Extract their text.
+3. Clean the text.
+4. Chunk the text intelligently.
+5. Generate embeddings.
+6. Store vectors in Vectra.
+7. Retrieve relevant information for a question.
+8. Give the retrieved context to a local LLM through Ollama.
+9. Generate a grounded answer.
+10. Avoid hallucinating when information is not available.
+
+The current technology stack includes:
+- Node.js
+- Express
+- Vectra / LocalIndex
+- Ollama
+- Embedding model: nomic-embed-text
+- Chat model: gemma3:4b
+- JavaScript
+- Frontend/local web application
+
+The current QA documents are:
+- lakshya_test_cases.md
+- lakshya_test_execution.md
+- lakshya_defects_observations.md
+
+==================================================
+2. PRODUCT GOAL
+==================================================
+
+The RAG should not be designed specifically around these three files.
+
+The architecture should be generic enough that future QA documents can be uploaded without rewriting the whole RAG.
+
+Generic pipeline:
+
+Document
+→ text extraction
+→ cleaning
+→ intelligent chunking
+→ embeddings
+→ vector index
+→ retrieval
+→ relevant context
+→ LLM
+→ grounded answer
+
+However, QA documents often contain structured entities such as:
+- Test Case ID
+- Bug ID
+- Requirement ID
+- Status
+- Severity
+- Priority
+
+Therefore, the retrieval system can have domain-specific retrieval enhancements while keeping the core RAG generic.
+
+For example:
+
+Normal question:
+"What are the authentication requirements?"
+→ semantic retrieval
+
+Specific entity question:
+"Give me details of Test Case ID 24."
+→ detect Test Case ID 24
+→ deterministic lookup across indexed documents
+→ retrieve exact matching records
+→ combine with semantic results
+→ LLM
+
+The system should NOT hardcode TC-22, TC-24, etc.
+
+==================================================
+3. INITIAL PROBLEM
+==================================================
+
+Originally, when we asked questions, the RAG repeatedly returned:
+
+"The available documents do not contain enough information to answer this confidently."
+
+Even though the documents contained the required information.
+
+We initially suspected the RAG/LLM was failing, but debugging eventually showed the actual problem.
+
+The vector index was empty at one point.
+
+The application showed three "indexed sources", but that came from documents.json and did not necessarily mean the Vectra vector index contained vectors.
+
+We confirmed:
+
+DEBUG Vectra index item count: 0
+
+That explained why:
+
+DEBUG initial semantic result count: 0
+
+and therefore no Test Case IDs were extracted and no sources reached the LLM.
+
+We re-indexed the three documents after that.
+
+The index was then populated.
+
+==================================================
+4. CHUNKING IMPROVEMENT
+==================================================
+
+We modified chunking so that Test Case records are treated intelligently.
+
+The current chunkText() function detects:
+
+Test Case ID: <number>
+
+and attempts to keep each test case as a coherent block rather than blindly splitting through records.
+
+Current behavior:
+- If the document contains Test Case IDs, it identifies the start of each test case.
+- It creates chunks around those test case blocks.
+- If a block is too large, it splits it safely while maintaining overlap.
+- If there are no Test Case IDs, it falls back to generic chunking.
+
+This change has already been made.
+
+DO NOT unnecessarily modify chunkText() unless a future test proves a real problem with it.
+
+==================================================
+5. IMPORTANT DISCOVERY ABOUT test_execution.md
+==================================================
+
+One of the most important discoveries was that:
+
+lakshya_test_execution.md
+
+does not necessarily contain the complete details of each test case.
+
+It mainly contains Test Case IDs grouped by execution status/category.
+
+For example, it can contain information like:
+- Test Case ID: 22
+- Test Case ID: 24
+etc.
+
+But the complete details are in:
+
+lakshya_test_cases.md
+
+Therefore, simply retrieving the chunk from test_execution.md is sometimes insufficient.
+
+We wanted the RAG to understand:
+
+Test Case ID
+→ find execution information
+→ find detailed test-case information
+→ optionally find defect/observation information
+→ combine the relevant context
+→ answer the user
+
+==================================================
+6. FIRST RETRIEVAL BUG
+==================================================
+
+Initially, we implemented a secondary lookup intended to retrieve an exact Test Case ID.
+
+However, the first implementation incorrectly performed another semantic/vector search.
+
+For example, when searching for:
+
+Test Case ID: 22
+
+the "exact" lookup returned things such as:
+- TC-22
+- TC-42
+- TC-62
+- TC-21
+- TC-23
+
+That was NOT a real exact lookup.
+
+It was simply another semantic search.
+
+We identified this as incorrect.
+
+==================================================
+7. DETERMINISTIC EXACT-ID LOOKUP FIX
+==================================================
+
+We changed the retrieval logic to use Vectra's:
+
+listItems()
+
+API.
+
+The system now:
+1. Performs normal semantic retrieval.
+2. Extracts Test Case IDs from:
+   - the user question
+   - semantic retrieval results
+3. Uses listItems() to inspect all indexed items.
+4. Performs deterministic matching against the stored text.
+5. Uses a regex similar to:
+
+Test Case ID:\s*<ID>(?!\d)
+
+6. Searches across ALL indexed documents.
+7. Merges exact-ID results with semantic results.
+8. Deduplicates results.
+9. Preserves metadata such as:
+   - id
+   - documentName
+   - page
+   - text
+   - score
+   - chunkId
+
+This was a major improvement.
+
+==================================================
+8. SECOND RETRIEVAL BUG
+==================================================
+
+There was another bug introduced by the deterministic lookup.
+
+Exact matches were initially assigned:
+
+score: 1
+
+But later the source score was normalized using:
+
+1 - result.score
+
+Therefore:
+
+1 - 1 = 0
+
+The exact match became score 0.
+
+The grounding logic used:
+
+sources.length > 0 && sources[0].score >= 0.16
+
+Therefore exact matches could incorrectly be treated as ungrounded.
+
+We fixed this.
+
+The current retrieval logic allows deterministic exact-ID matches to be treated as high-confidence results without simply disabling the grounding system.
+
+DO NOT remove grounding or set the threshold to zero just to make answers appear.
+
+==================================================
+9. IMPORTANT TEST RESULTS
+==================================================
+
+After the fixes, we tested multiple Test Case IDs.
+
+These worked:
+
+- TC-22
+- TC-24
+- TC-25
+- TC-34
+- TC-35
+- TC-36
+
+This is important because it proves the system is NOT hardcoded only for Test Case ID 22.
+
+For example, when asked for complete details of TC-22, the RAG successfully returned information such as:
+
+- Test Case ID: 22
+- Test Case Name: Login - 3
+- Description
+- Expected Result
+- Actual Result
+- Status: Pass
+- Severity
+- Priority
+- Source document: lakshya_test_cases.md
+
+The response showed multiple sources.
+
+Therefore:
+
+Exact Test Case ID retrieval is currently considered WORKING.
+
+==================================================
+10. CURRENT server/index.js
+==================================================
+
+The current complete server/index.js is the following:
+
+[PASTE THE MOST RECENT FULL server/index.js HERE IF NEEDED]
+
+Important parts currently include:
+
+- Express server
+- Vectra LocalIndex
+- document upload
+- extractText()
+- cleanText()
+- chunkText()
+- Ollama embedding
+- ensureIndex()
+- retrieve()
+- generateAnswer()
+- streaming ask endpoint
+
+The latest full code that was reviewed contains this retrieval architecture:
+
+async function retrieve(question, topK) {
+  await ensureIndex();
+  const [queryVector] = await embed([question]);
+  const initialResults = await index.queryItems(queryVector, topK);
+
+  const extractedIds = new Set();
+
+  for (const match of question.matchAll(/Test Case ID:\s*(\d+)/gi)) {
+    extractedIds.add(String(match[1]).trim());
+  }
+
+  for (const result of initialResults) {
+    const text = String(result?.item?.metadata?.text || '');
+
+    for (const match of text.matchAll(/Test Case ID:\s*(\d+)/gi)) {
+      extractedIds.add(String(match[1]).trim());
+    }
+  }
+
+  const exactResults = [];
+  const allIndexedItems = await index.listItems();
+
+  for (const testCaseId of extractedIds) {
+    const exactPattern = new RegExp(
+      `Test Case ID:\\s*${testCaseId}(?!\\d)`,
+      'i'
+    );
+
+    for (const item of allIndexedItems) {
+      const text = String(item?.metadata?.text || '');
+
+      if (exactPattern.test(text)) {
+        exactResults.push({
+          item,
+          score: 1
+        });
+      }
+    }
+  }
+
+  const dedupedResults = [];
+  const seen = new Set();
+
+  for (const result of [...initialResults, ...exactResults]) {
+    const metadata = result?.item?.metadata || {};
+
+    const key =
+      metadata.id ||
+      `${metadata.documentName || 'unknown'}-${metadata.chunkId ?? 'chunk'}-${metadata.text || ''}`;
+
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    dedupedResults.push(result);
+  }
+
+  const sources = dedupedResults.map((result) => {
+    const metadata = result?.item?.metadata || {};
+
+    return {
+      id: metadata.id,
+      documentName: metadata.documentName,
+      page: metadata.page,
+      text: metadata.text,
+      score: ...,
+      chunkId: metadata.chunkId,
+    };
+  });
+
+  return {
+    sources,
+    grounded: ...
+  };
+}
+
+NOTE:
+The exact current score-normalization implementation should be inspected from the actual file before making future changes. Do not assume it is identical to an older version.
+
+==================================================
+11. CURRENT RAG BEHAVIOR TESTS
+==================================================
+
+We tested several types of questions.
+
+TEST A — Specific Test Case ID
+
+Example:
+"Give me the complete details of Test Case ID 22."
+
+Works.
+
+TC-24, TC-25, TC-34, TC-35, TC-36 also worked.
+
+Therefore exact-ID retrieval works.
+
+--------------------------------------------------
+
+TEST B — Observation-based query
+
+Question:
+"Which test cases are currently under observation?"
+
+The response was:
+
+"Test Case ID: 100 has a ‘Pass with Observation’ record. Test Case IDs 57-63 are not present as test-case records in the supplied source document, so no status was invented for them."
+
+Analysis:
+This suggests the current semantic/top-K retrieval is NOT necessarily finding all observation-related records.
+
+However, the model correctly avoided inventing information.
+
+--------------------------------------------------
+
+TEST C — Status-based query
+
+Question:
+"Which test cases have failed?"
+
+The response was:
+
+"There is not enough information to answer this question. The provided documents only list test cases with a “pass” status."
+
+This is suspicious/problematic because test_execution.md contains different execution statuses.
+
+This suggests broad status queries are not being retrieved correctly.
+
+--------------------------------------------------
+
+TEST D — Feature-based query
+
+Question:
+"What test cases are related to login?"
+
+The response was:
+
+"The following test cases are related to login: 34, 41, 39, 38, and 20."
+
+We suspect this is affected by TOP-K.
+
+The login test cases span a larger range, roughly around IDs 20–42.
+
+The current retrieval may only be returning a limited number of chunks.
+
+Important:
+Do not assume that simply increasing topK is the complete solution.
+
+The user wants questions such as "Which test cases are related to login?" to return a meaningful set, not just arbitrary top-K semantic matches.
+
+--------------------------------------------------
+
+TEST E — Detailed QA question
+
+Question:
+"What are the common issues found in the login functionality?"
+
+The answer was:
+
+"Based on the provided documents, common issues found in the login functionality include:
+
+* A “Login Failed” error popup appears after selecting “Yes, secure my card,” and clicking “Continue” repeatedly triggers the same popup, causing the payment flow to become stuck. (Sources 2, 4)
+* Invalid email and valid password combinations result in an error message and prevent login. (Source 3, 5)"
+
+We identified a relevance problem here.
+
+The first issue is actually a card/payment flow issue that is related to login/authentication language but is NOT necessarily a login-specific test case.
+
+This shows that pure semantic similarity can retrieve "related" content that is not actually specific enough to the user's requested feature.
+
+==================================================
+12. CURRENT ARCHITECTURAL ASSESSMENT
+==================================================
+
+Current status:
+
+Document ingestion                  WORKING
+Text cleaning                       WORKING
+Test-case-aware chunking            WORKING
+Embedding generation                WORKING
+Vectra indexing                     WORKING
+Normal semantic retrieval           PARTIALLY WORKING
+Exact Test Case ID retrieval        WORKING
+Cross-document ID retrieval         WORKING
+Deduplication                       WORKING
+Grounding                           WORKING
+LLM answer generation               WORKING
+Broad "all failed" queries          NEEDS IMPROVEMENT
+Broad "all observation" queries     NEEDS IMPROVEMENT
+Feature retrieval                   NEEDS IMPROVEMENT
+Semantic relevance                  NEEDS IMPROVEMENT
+
+==================================================
+13. IMPORTANT CURRENT DESIGN DIRECTION
+==================================================
+
+We do NOT want to blindly increase topK and call the problem solved.
+
+We are considering a retrieval architecture more like:
+
+USER QUESTION
+     |
+     +------------------------------+
+     |                              |
+Specific entity?                Broad query?
+"TC-24"                         "all failed cases"
+     |                              |
+Exact/deterministic lookup      Structured retrieval
+     |                              |
+     +--------------+---------------+
+                    |
+             Semantic retrieval
+                    |
+                Re-ranking
+                    |
+                   LLM
+
+Specific Test Case ID queries:
+→ deterministic exact lookup
+
+Broad structured questions:
+→ may need special retrieval logic for status/observation/category fields
+
+Feature questions:
+→ semantic retrieval + better relevance/reranking/filtering
+
+==================================================
+14. FUTURE-PROOFING REQUIREMENT
+==================================================
+
+Do NOT hardcode:
+- lakshya_test_cases.md
+- TC-22
+- TC-24
+- TC-30
+- specific ranges of Test Case IDs
+
+The system should work with future documents.
+
+The current three documents are simply the current test dataset.
+
+The generic RAG should support arbitrary QA documents.
+
+Domain-specific enhancements can detect generic structures such as:
+- Test Case ID
+- Bug ID
+- Requirement ID
+- status
+- severity
+- priority
+
+The architecture should remain extensible.
+
+"Future-proof" does NOT mean it can answer every possible document perfectly.
+
+It means:
+- core ingestion is generic
+- core retrieval is generic
+- structured retrieval strategies can be added without rewriting the entire system
+- no hardcoded document-specific logic
+
+==================================================
+15. IMPORTANT UI CHANGE
+==================================================
+
+We also identified a UI usability issue.
+
+The user had to scroll down every time to type another prompt.
+
+The desired behavior is:
+
+- conversation/history can scroll
+- prompt/typing area should remain stable/fixed
+- user should not have to scroll down to enter a new question
+
+This UI improvement was requested and should not be forgotten.
+
+Also, the Index Documents button was confusing.
+
+The user suggested clearer wording such as:
+
+"Click here to index documents"
+
+rather than a button simply saying:
+
+"Index Documents"
+
+because users may not understand what the action does.
+
+This is a UX improvement that should be considered in the documentation/product polish phase.
+
+==================================================
+16. IMPORTANT INDEXING UNDERSTANDING
+==================================================
+
+Do NOT tell the user to re-index every time code changes.
+
+Re-indexing is required when:
+- vector index was deleted
+- documents changed
+- chunking/embedding logic changed in a way that changes stored vectors
+
+Changing retrieve() logic alone does NOT require re-indexing.
+
+At one point vector-index was deleted after chunking changes, so re-indexing was necessary.
+
+The UI showing three indexed documents does not by itself prove the Vectra vector index contains vectors.
+
+documents.json:
+→ document metadata/list
+
+vector-index:
+→ actual searchable vector data
+
+==================================================
+17. DEBUGGING LESSON
+==================================================
+
+Temporary debug logging was used during troubleshooting.
+
+Examples included:
+
+DEBUG Vectra index item count
+DEBUG retrieve question
+DEBUG initial semantic result count
+DEBUG extracted Test Case IDs
+DEBUG exact lookup Test Case ID
+DEBUG exact lookup result count
+DEBUG final combined source count
+
+These logs helped identify the retrieval issues.
+
+The temporary diagnostic logs were later removed after the problem was diagnosed.
+
+Do not re-add debugging unless there is a specific reason.
+
+==================================================
+18. CURRENT STOPPING POINT
+==================================================
+
+We stopped after testing the RAG with different question types.
+
+The most recent conclusions were:
+
+- Exact Test Case ID retrieval is working.
+- Multiple IDs were successfully tested: 22, 24, 25, 34, 35, 36.
+- Broad status/observation retrieval still needs improvement.
+- Feature-based retrieval may be limited by top-K.
+- Semantic retrieval sometimes returns related-but-not-specific content.
+- We should improve retrieval intelligently rather than blindly changing things.
+
+The next work should NOT be another random Copilot modification.
+
+First understand the current retrieval architecture and then improve the broad-query retrieval.
+
+==================================================
+19. DOCUMENTATION TASK
+==================================================
+
+A major upcoming task is to create proper project documentation.
+
+The documentation should be based on the entire project history and actual implementation.
+
+Do not invent features that have not been implemented.
+
+Documentation should cover things such as:
+
+1. Project title
+2. Problem statement
+3. Why this problem matters
+4. Product objective
+5. Target users
+6. How the RAG works
+7. System architecture
+8. Technology stack
+9. Document ingestion flow
+10. Text extraction
+11. Text cleaning
+12. Chunking strategy
+13. Embedding generation
+14. Vector database
+15. Retrieval strategy
+16. Exact Test Case ID retrieval
+17. Cross-document retrieval
+18. Grounding/fallback behavior
+19. LLM answer generation
+20. Current supported question types
+21. Current limitations
+22. Testing performed
+23. Bugs discovered and fixes
+24. Future improvements
+25. Version 1 vs future versions
+26. Lessons learned
+
+The documentation must clearly distinguish:
+
+IMPLEMENTED
+vs
+PLANNED / FUTURE
+
+Do not claim something is working if we have not tested it.
+
+==================================================
+20. PRODUCT PHILOSOPHY
+==================================================
+
+This project is treated as a PRODUCT.
+
+Every product/project explanation should answer:
+
+1. What problem does this solve?
+2. Why would a company use it?
+3. How does the solution work?
+4. Which technologies are used?
+5. What was learned by building it?
+
+Do not describe it as simply:
+"an n8n/RAG assignment."
+
+The goal is to demonstrate real QA + AI engineering capability.
+
+==================================================
+21. WHAT NOT TO DO
+==================================================
+
+Do NOT:
+- restart the project from scratch
+- tell me to re-index without a reason
+- delete vector-index without a specific reason
+- keep changing chunkText() when the issue is retrieval
+- blindly increase topK
+- hardcode Test Case IDs
+- hardcode document names
+- invent Vectra APIs
+- disable grounding just to make answers appear
+- modify generateAnswer() before confirming retrieval context is correct
+- repeatedly ask me to verify something already verified
+- make multiple unrelated code changes at once
+
+If a code change is needed:
+1. explain the exact problem
+2. explain the intended fix
+3. give one precise Copilot prompt
+4. let me show you Copilot's proposed change
+5. verify the change
+6. then tell me to Keep/restart/test
+
+==================================================
+22. HOW TO CONTINUE
+==================================================
+
+Continue from the exact current state.
+
+First acknowledge that you understand the project state.
+
+Then do NOT immediately modify code.
+
+The next logical phase is:
+- finish testing broad retrieval behavior
+- determine how to handle structured status/observation queries
+- improve semantic relevance/reranking
+- test more question types
+- then create complete project documentation based on the actual final implementation
+
+When creating documentation, use the terminology already established:
+- AI QA RAG
+- Test Case ID
+- semantic retrieval
+- deterministic exact-ID retrieval
+- cross-document retrieval
+- Vectra
+- Ollama
+- grounding
+- source documents
+- QA documents
+
+Do not silently replace these terms with unrelated architecture.
+
+==================================================
+23. FINAL IMPORTANT CONTEXT
+==================================================
+
+The project has gone through significant debugging.
+
+The important breakthrough was:
+
+Before:
+Question
+→ semantic retrieval
+→ 0/poor results
+→ "not enough information"
+
+After the retrieval fixes:
+Question containing TC-24
+→ detect TC-24
+→ deterministic listItems() lookup
+→ exact matching across indexed documents
+→ detailed TC-24 record retrieved
+→ LLM
+→ useful answer
+
+This has been proven with multiple Test Case IDs.
+
+That is the current stable foundation.
+
+The next challenge is NOT "make TC-22 work."
+
+TC-22 already works.
+
+The next challenge is:
+
+MAKE THE RAG GOOD AT BROAD AND SEMANTIC QA QUESTIONS WITHOUT BREAKING THE EXACT-ID RETRIEVAL THAT NOW WORKS.
+
+And after that, produce proper project documentation based on everything actually implemented and tested.
