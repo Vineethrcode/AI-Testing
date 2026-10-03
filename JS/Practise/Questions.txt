@@ -1,0 +1,258 @@
+Problem 1: The Iteration Warm-up  (done)
+Write a for loop that prints all even numbers from 0 to 20. Then, rewrite the same logic using a while loop.
+
+Problem 2: Character Counter (done)
+Create a string variable with any sentence. Use a for-of loop to count how many times the letter "e" appears in that string.
+
+Problem 3: The Object Explorer (done)
+Create an object student with properties like name, age, cgpa, and city. Use a for-in loop to print each key and its value in the format: key: value.
+
+Problem 4: Username Generator (done)
+Prompt the user for their full name (e.g., "John Doe"). Generate a username by adding "@" at the beginning, converting all letters to lowercase, and appending the length of the name at the end. (Result: @johndoe8)
+
+Problem 5: Multiplication Table   (done)
+Ask the user for a number and print its multiplication table (up to 10) using a template literal inside a loop.
+
+Problem 6: String Reversal 		(done)
+Take a string like "JavaScript" and use a loop to print it in reverse ("tpircSavaJ"). Restriction: Do not use built-in reverse methods; use a loop.
+
+Problem 7: The Vowel Stripper
+Write a script that takes a string and creates a new string with all the vowels (a, e, i, o, u) removed using a loop and a conditional.
+
+Problem 8: FizzBuzz (Loop Logic)
+Write a loop from 1 to 50. For multiples of 3, print "Fizz"; for multiples of 5, print "Buzz"; for multiples of both, print "FizzBuzz".
+
+Problem 9: Sum of Digits	(done)
+Given a string of numbers like "12345", use a loop to calculate the sum of all the digits (Result should be 15).
+
+Problem 10: Palindrome Check			(done)
+Write a script to check if a string (e.g., "madam" or "racecar") is a palindrome. Use a loop to compare characters from the start and the end.
+
+
+[New] Level 2: Logic & Complexity Challenges
+Problem 11: The Case Swapper
+Take a string like "AbCdE" and use a loop to switch the cases. Lowercase letters should become uppercase, and uppercase should become lowercase.
+
+Result: "aBcDe"
+
+Problem 12: Hidden Credit Card
+Take a string of 16 numbers (e.g., "1234567812345678"). Use a loop or string methods to replace the first 12 digits with # and only show the last 4.
+
+Result: "############5678"
+
+Problem 13: The Word Counter
+Take a long sentence string. Use a loop to count how many words are in the sentence. (Hint: Words are usually separated by spaces).
+
+Example: "I am learning JavaScript" → 4 words.
+
+Problem 14: Pyramid of Stars
+Use nested loops (a loop inside a loop) to print a pattern like this:
+
+Plaintext
+*
+**
+***
+****
+*****
+Problem 15: Find the Longest Word
+Take a string with multiple words. Use a loop to find and print which word has the most characters.
+
+Example: "Web development is amazing" → "development"
+
+
+***************************************************************************************************************************
+
+
+NEW QUESTIONS ON ARRAYS and LOOPS
+
+The "Methods & Logic" Circuit
+1. The "Tester's Filter" (Array Methods)    (done)
+You have an array of test scores: [45, 80, 32, 100, 90, 55, 70].
+
+Task: Use an array method to create a new array that only contains scores above 65 (the "Pass" threshold).
+
+Method to use: .filter()
+
+2. The "URL Maker" (String Methods)			(done)
+You have a product name: "Official Nike Running Shoes".
+
+Task: Turn this into a URL-friendly string by making it all lowercase and replacing the spaces with dashes.
+
+Result: "official-nike-running-shoes"
+
+Methods to use: .toLowerCase() and .replaceAll() (or a loop if you're feeling brave).
+
+3. The "Reverse Engineering" (String/Array Combo)	(done)
+Take the string "JavaScript".
+
+Task: Reverse it so it becomes "tpircSavaJ".
+
+Constraint: You must turn it into an Array first, reverse the array, and then turn it back into a String.
+
+Methods to use: .split(), .reverse(), and .join()
+
+4. The "Guest List" (Array Search) 	(done)
+You have a guest list: ["Arjun", "Sania", "Vijay", "Anjali"].
+
+Task: Write a simple if/else check. If "Vijay" is on the list, print "Access Granted." If not, print "Access Denied."
+
+Method to use: .includes()
+
+5. The "Truncator" (String Manipulation)	(done)
+You have a long bio: "I am a Computer Science student from Hyderabad currently learning Automation."
+
+Task: If the string is longer than 20 characters, cut it off at 20 and add "..." to the end.
+
+Methods to use: .length and .substring() (or .slice())
+
+
+***************************************************************************************************************************
+
+
+
+
+
+1. The "Priority Queue" (Shift & Push)			(done)
+Imagine you are managing a line at a bank.
+
+Start: let queue = ["Customer 1", "Customer 2", "Customer 3"];
+
+Task:
+
+A new customer ("Customer 4") arrives and joins the back of the line.
+
+The bank opens, and the person at the front of the line is served and removed.
+
+Goal: Print the final queue. Which methods did you use?
+
+2. The "Backwards Name" (String & Array Combo)				(done)
+Task: Take your name as a string (e.g., "Arjun").
+
+Convert it to uppercase.
+
+Get the first character using charAt().
+
+Get the last character using charAt() and .length.
+
+Goal: Print: "First letter is A and last letter is N."
+***************************************************************************************************************************
+
+3. The "Undo" Button (Push & Pop)
+In a text editor, we keep track of actions.
+
+Start: let actions = ["Type 'H'", "Type 'e'", "Type 'l'"];
+
+Task:
+
+The user types 'o'. Add it to the end.
+
+The user hits "Undo." Remove the last action.
+
+Goal: Print the actions array.
+
+4. The "VIP Guest" (Unshift)
+You have a guest list for a club.
+
+Start: let guests = ["Sania", "Vijay", "Anjali"];
+
+Task:
+
+A VIP guest ("Ranbir") arrives and must be put at the very front of the line.
+
+Goal: Print the updated list.
+
+5. The "Secret Code" (Strings & Methods)
+Task: Take the string "  javascript is cool  ".
+
+Trim the extra spaces from the start and end (Search for the trim() method!).
+
+Convert the whole thing to uppercase.
+
+Check if the final string includes the word "JAVA".
+
+Goal: Print the final string and a boolean (true/false) for the "JAVA" check.
+
+
+
+
+
+***************************************************************************************************************************
+
+Q1: Username Validator (Strings + Conditionals)			(done)
+let username = "Tony123";
+👉 Rules:
+Username length must be at least 5
+Username should NOT contain spaces
+👉 Output:
+"Valid Username"
+OR
+"Invalid Username"
+
+Q2: Even and Odd Counter (Loops + Arrays + Conditionals) 		(done)
+let numbers = [12, 7, 9, 20, 14, 3];
+👉 Using a loop:
+Count how many even numbers
+Count how many odd numbers
+👉 Final output:
+Even: X
+Odd: Y
+
+Q3: Find Largest Number (Arrays + Loop + Condition)			(done but need to improve) 
+let numbers = [45, 67, 12, 89, 23];
+👉 Find and print:
+Largest number is 89
+⚠️ Don’t use:
+Math.max()
+
+3(i)
+let numbers = [45, 67, 12, 89, 23];				(done)
+👉 Find and print:
+Smallest number is 12
+⚠️ Same style as largest-number problem
+But your comparison logic changes.
+
+3(ii)
+Q2: Find Second Largest Number					(done but took help of AI)
+let numbers = [45, 67, 12, 89, 23];
+👉 Output:
+Second largest number is 67
+⚠️ This is IMPORTANT.
+This will test whether you actually understood:
+variable updates
+comparison flow
+Hint:
+👉 One variable is NOT enough now.
+
+3(iii)									(done)
+Q3: Find Difference Between Largest and Smallest
+let numbers = [45, 67, 12, 89, 23];
+👉 Output:
+Difference is 77
+Because:
+89 - 12 = 77
+
+***************************************************************************************************************************
+Q4: Q4: Reverse a String (Strings + Loop)
+let word = "JavaScript";
+👉 Output:
+tpircSavaJ
+⚠️ Don’t use:
+split()
+reverse()
+join()
+
+
+Q5: Student Result System (Arrays + Loop + Conditionals)
+let marks = [85, 42, 90, 67, 30];
+👉 Rules:
+Marks ≥ 50 → Pass
+Below 50 → Fail
+👉 Print:
+85 - Pass
+42 - Fail
+..
+👉 Also print:
+Total Passed: X
+Total Failed: Y	
+
+***************************************************************************************************************************

@@ -1,0 +1,25 @@
+Q4: Longest Word Finder		(done)
+let words = ["cat", "elephant", "bat", "javascript"];
+👉 Find and print:
+Longest word is javascript
+⚠️ Rules
+Don’t use:
+sort()
+reduce()
+Use:
+loops
+conditions
+.length
+
+***************************************************************************************************************************
+Q5: Strict Increasing Order Checker				(done)
+let numbers = [10, 20, 30, 25, 40];
+👉 Check if array is strictly increasing.
+Rules:
+Every next number must be greater than previous
+Expected output:
+Not Increasing
+Because:
+25 < 30 
+
+***************************************************************************************************************************

@@ -1,0 +1,60 @@
+Level 1 — Must know
+
+Reverse a string
+"hello" → "olleh"
+Tests loops, indexing, split/reverse/join.
+
+Check if a string is palindrome
+"madam" → true
+"hello" → false
+
+Count vowels and consonants
+"javascript" → vowels: 3, consonants: 7
+
+Count frequency of each character
+"hello" → { h:1, e:1, l:2, o:1 }
+Very important for interview logic.
+
+Find the first non-repeating character
+"aabbcd" → "c"
+
+Remove duplicate characters
+"programming" → "progamin"
+
+Check whether two strings are anagrams
+"listen" & "silent" → true
+
+
+🔥 Level 2 — Common interview questions
+Find the most frequent character
+"javascript" → "a"
+
+Count the number of words
+"I love JavaScript" → 3
+
+Reverse words in a sentence
+"I love JavaScript" → "JavaScript love I"
+
+Capitalize the first letter of every word
+"hello world" → "Hello World"
+
+Find the longest word in a sentence
+"I am learning JavaScript" → "JavaScript"
+
+Remove all spaces from a string
+"hello world js" → "helloworldjs"
+
+	
+🔥 Level 3 — Good for stronger interviews
+Find the longest substring without repeating characters
+"abcabcbb" → "abc" → length 3
+This introduces the sliding window pattern.
+Check if one string is a rotation of another
+"abcd" and "cdab" → true
+Find all duplicate characters
+"programming" → r, g, m
+Count occurrences of a particular substring
+"abababa", "aba" → 3
+Find the longest palindromic substring
+"babad" → "bab" / "aba"
+More advanced; don't start here.
